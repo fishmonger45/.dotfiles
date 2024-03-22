@@ -1,0 +1,8 @@
+[user]
+	name = fishmonger45
+	email = fishmonger45@proton.me
+	signingkey = 439FD95EB3AA1F6F
+[commit]
+	gpgsign = true
+[core]
+	editor = nvim
