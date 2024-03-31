@@ -12,9 +12,9 @@ vim.o.incsearch=true
 vim.o.showmatch=true
 vim.o.hlsearch=true
 vim.o.foldenable=true
-vim.o.shiftwidth=4
+vim.o.shiftwidth=2
 vim.g.mapleader=","
-vim.cmd.colorscheme("torte")
+vim.o.termguicolors=true
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -28,5 +28,122 @@ if not vim.loop.fs_stat(lazypath) then
   })
 end
 vim.opt.rtp:prepend(lazypath)
-require("lazy").setup("plugins")
+require("lazy").setup({
+    { "vimwiki/vimwiki", lazy=false },
+    { "folke/which-key.nvim",
+      event = "VeryLazy",
+      init = function()
+	vim.o.timeout = true
+	vim.o.timeoutlen = 300
+      end,
+    },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    lazy=false,
+    config = function(_, opts)
+      require('nvim-treesitter.configs').setup {
+	ensure_installed = {"typescript", "tsx", "rust"},
+	highlight= { enable = true },
+	auto_install = true,
+	incremental_selection = { enable = true },
+	indent = { enable = true }
+      }
+    end
+  },
+  { "tpope/vim-surround", lazy = false },
+  { "stevearc/oil.nvim" },
+  { "neovim/nvim-lspconfig",
+    dependencies = {
+      'williamboman/mason-lspconfig.nvim',
+      dependencies = { 'williamboman/mason.nvim' },
+    },
+
+    config = function()
+      local lspconfig = require("lspconfig")
+      local mason = require("mason")
+      mason.setup()
+      lspconfig.rust_analyzer.setup({})
+      lspconfig.tsserver.setup({})
+      lspconfig.solargraph.setup({})
+
+      require('mason-lspconfig').setup({
+	ensure_installed = {
+	  'rust_analyzer',
+	  'tsserver',
+	  'ruby_ls',
+	  'rubocop'
+	},
+      })
+    end,
+  },
+  { "brenoprata10/nvim-highlight-colors" },
+  { "ibhagwan/fzf-lua",
+    config = function()
+      local fzf = require("fzf-lua")
+      fzf.setup({})
+      vim.keymap.set("n", "<leader>ff", fzf.files, {})
+      vim.keymap.set("n", "<leader>fb", fzf.buffers, {})
+      vim.keymap.set("n", "<leader>fg", fzf.live_grep, {})
+    end
+  },
+  {
+    "hrsh7th/nvim-cmp",
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-nvim-lua",
+      "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-path",
+      "hrsh7th/cmp-cmdline",
+      "saadparwaiz1/cmp_luasnip",
+      "L3MON4D3/LuaSnip",
+    },
+    config = function()
+      local cmp = require("cmp")
+      vim.opt.completeopt = { "menu", "menuone", "noselect" }
+
+      cmp.setup({
+	snippet = {
+	  expand = function(args)
+	    require("luasnip").lsp_expand(args.body)
+	  end,
+	},
+	window = {
+	  -- completion = cmp.config.window.bordered(),
+	  -- documentation = cmp.config.window.bordered(),
+	},
+	mapping = cmp.mapping.preset.insert({
+	  ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+	  ["<C-f>"] = cmp.mapping.scroll_docs(4),
+	  ["<C-Space>"] = cmp.mapping.complete(),
+	  ["<C-e>"] = cmp.mapping.abort(),
+	  ["<CR>"] = cmp.mapping.confirm({ select = true }),
+	}),
+	sources = cmp.config.sources({
+	  { name = "nvim_lsp" },
+	  { name = "nvim_lua" },
+	  { name = "luasnip" },
+	}, {
+	  { name = "buffer" },
+	  { name = "path" },
+	}),
+      })
+
+      cmp.setup.cmdline(":", {
+	mapping = cmp.mapping.preset.cmdline(),
+	sources = cmp.config.sources({
+	  { name = "path" },
+	}, {
+	  { name = "cmdline" },
+	}),
+      })
+    end
+  },
+  { "metalelf0/jellybeans-nvim", dependencies = {"rktjmp/lush.nvim"}, lazy = false,
+    config = function()
+      
+      vim.cmd.colorscheme("jellybeans-nvim")
+
+    end
+  },
+})
 
