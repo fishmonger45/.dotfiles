@@ -29,20 +29,20 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
-    { "vimwiki/vimwiki", lazy=false },
-    { "folke/which-key.nvim",
-      event = "VeryLazy",
-      init = function()
-	vim.o.timeout = true
-	vim.o.timeoutlen = 300
-      end,
-    },
+  { "vimwiki/vimwiki", lazy=false },
+  { "folke/which-key.nvim",
+    event = "VeryLazy",
+    init = function()
+      vim.o.timeout = true
+      vim.o.timeoutlen = 300
+    end,
+  },
   {
     "nvim-treesitter/nvim-treesitter",
     lazy=false,
     config = function(_, opts)
       require('nvim-treesitter.configs').setup {
-	ensure_installed = {"typescript", "tsx", "rust"},
+	ensure_installed = {"typescript", "tsx", "rust", "python", "graphql"},
 	highlight= { enable = true },
 	auto_install = true,
 	incremental_selection = { enable = true },
@@ -51,7 +51,7 @@ require("lazy").setup({
     end
   },
   { "tpope/vim-surround", lazy = false },
-  { "stevearc/oil.nvim" },
+  { "stevearc/oil.nvim", lazy = false, opts = {}, },
   { "neovim/nvim-lspconfig",
     dependencies = {
       'williamboman/mason-lspconfig.nvim',
@@ -63,14 +63,27 @@ require("lazy").setup({
       local mason = require("mason")
       mason.setup()
       lspconfig.rust_analyzer.setup({})
+      lspconfig.pylsp.setup({
+	settings = {
+	  pylsp = {
+	    plugins = {
+	      pylint = {enabled = false},
+	      pycodestyle = { enabled = false },
+	    },
+	  },
+	},
+      })
       lspconfig.tsserver.setup({})
+      lspconfig.graphql.setup({})
       lspconfig.solargraph.setup({})
 
       require('mason-lspconfig').setup({
 	ensure_installed = {
 	  'rust_analyzer',
+	  'pylsp',
 	  'tsserver',
-	  'ruby_ls',
+	  'solargraph',
+	  'graphql',
 	  'rubocop'
 	},
       })
@@ -80,7 +93,19 @@ require("lazy").setup({
   { "ibhagwan/fzf-lua",
     config = function()
       local fzf = require("fzf-lua")
-      fzf.setup({})
+      fzf.setup({
+      --   winopts = {
+      --     split = "belowright 10new",
+      --     border = "single",
+      --     preview = {
+      --       hidden = "hidden",
+      --       border = "border",
+      --       title = false,
+      --       layout = "horizontal",
+      --       horizontal = "right:50%",
+      --     },
+      --   },
+      })
       vim.keymap.set("n", "<leader>ff", fzf.files, {})
       vim.keymap.set("n", "<leader>fb", fzf.buffers, {})
       vim.keymap.set("n", "<leader>fg", fzf.live_grep, {})
@@ -106,10 +131,6 @@ require("lazy").setup({
 	  expand = function(args)
 	    require("luasnip").lsp_expand(args.body)
 	  end,
-	},
-	window = {
-	  -- completion = cmp.config.window.bordered(),
-	  -- documentation = cmp.config.window.bordered(),
 	},
 	mapping = cmp.mapping.preset.insert({
 	  ["<C-b>"] = cmp.mapping.scroll_docs(-4),
@@ -138,12 +159,23 @@ require("lazy").setup({
       })
     end
   },
-  { "metalelf0/jellybeans-nvim", dependencies = {"rktjmp/lush.nvim"}, lazy = false,
+  { "ray-x/lsp_signature.nvim",
+    event = "VeryLazy",
+    opts = {},
+    config = function(_, opts) require'lsp_signature'.setup(opts) end
+  },
+  {
+    "metalelf0/jellybeans-nvim", 
+    dependencies = {"rktjmp/lush.nvim"},
+    lazy = false,
+    priority = 1000, -- load first
     config = function()
-      
-      vim.cmd.colorscheme("jellybeans-nvim")
-
+      vim.cmd([[colorscheme jellybeans-nvim]])
     end
   },
+  {"tpope/vim-fugitive", lazy = false},
+  {"almo7aya/openingh.nvim", lazy = false},
+  {"lewis6991/gitsigns.nvim", lazy = false, config = function(_, opts) require('gitsigns').setup(opts) end},
+  {"nvim-tree/nvim-tree.lua", lazy = false, config = function(_, opts) require('nvim-tree').setup() end},
 })
 
