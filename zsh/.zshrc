@@ -9,7 +9,7 @@ export XDG_CONFIG_HOME=$HOME/.config
 setopt share_history
 setopt globdots
 source $HOME/.fzf.zsh
-#source <(fzf --zsh)
+
 . "$HOME/.cargo/env"
 PS1='%2d $ '
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
