@@ -29,14 +29,6 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
-  { "vimwiki/vimwiki", lazy=false },
-  { "folke/which-key.nvim",
-    event = "VeryLazy",
-    init = function()
-      vim.o.timeout = true
-      vim.o.timeoutlen = 300
-    end,
-  },
   {
     "nvim-treesitter/nvim-treesitter",
     lazy=false,
@@ -73,7 +65,6 @@ require("lazy").setup({
 	  },
 	},
       })
-      lspconfig.tsserver.setup({})
       lspconfig.graphql.setup({})
       lspconfig.solargraph.setup({})
 
@@ -81,7 +72,6 @@ require("lazy").setup({
 	ensure_installed = {
 	  'rust_analyzer',
 	  'pylsp',
-	  'tsserver',
 	  'solargraph',
 	  'graphql',
 	  'rubocop'
@@ -94,17 +84,6 @@ require("lazy").setup({
     config = function()
       local fzf = require("fzf-lua")
       fzf.setup({
-      --   winopts = {
-      --     split = "belowright 10new",
-      --     border = "single",
-      --     preview = {
-      --       hidden = "hidden",
-      --       border = "border",
-      --       title = false,
-      --       layout = "horizontal",
-      --       horizontal = "right:50%",
-      --     },
-      --   },
       })
       vim.keymap.set("n", "<leader>ff", fzf.files, {})
       vim.keymap.set("n", "<leader>fb", fzf.buffers, {})
@@ -173,9 +152,5 @@ require("lazy").setup({
       vim.cmd([[colorscheme jellybeans-nvim]])
     end
   },
-  {"tpope/vim-fugitive", lazy = false},
-  {"almo7aya/openingh.nvim", lazy = false},
-  {"lewis6991/gitsigns.nvim", lazy = false, config = function(_, opts) require('gitsigns').setup(opts) end},
-  {"nvim-tree/nvim-tree.lua", lazy = false, config = function(_, opts) require('nvim-tree').setup() end},
 })
 
