@@ -1,3 +1,6 @@
+vim.o.colorcolumn = '80'
+vim.o.vb=true
+vim.o.smartcase=true
 vim.o.number=true
 vim.o.lazyredraw=true
 vim.o.showcmd=true
@@ -43,7 +46,6 @@ require("lazy").setup({
     end
   },
   { "tpope/vim-surround", lazy = false },
-  { "stevearc/oil.nvim", lazy = false, opts = {}, },
   { "neovim/nvim-lspconfig",
     dependencies = {
       'williamboman/mason-lspconfig.nvim',
@@ -67,6 +69,7 @@ require("lazy").setup({
       })
       lspconfig.graphql.setup({})
       lspconfig.solargraph.setup({})
+      lspconfig.ts_ls.setup({})
 
       require('mason-lspconfig').setup({
 	ensure_installed = {
@@ -74,7 +77,8 @@ require("lazy").setup({
 	  'pylsp',
 	  'solargraph',
 	  'graphql',
-	  'rubocop'
+	  'rubocop',
+	  'ts_ls'
 	},
       })
     end,
@@ -92,25 +96,18 @@ require("lazy").setup({
   },
   {
     "hrsh7th/nvim-cmp",
+    event = "InsertEnter",
     dependencies = {
+      "neovim/nvim-lspconfig",
       "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-nvim-lua",
       "hrsh7th/cmp-buffer",
       "hrsh7th/cmp-path",
-      "hrsh7th/cmp-cmdline",
-      "saadparwaiz1/cmp_luasnip",
-      "L3MON4D3/LuaSnip",
     },
     config = function()
       local cmp = require("cmp")
       vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
       cmp.setup({
-	snippet = {
-	  expand = function(args)
-	    require("luasnip").lsp_expand(args.body)
-	  end,
-	},
 	mapping = cmp.mapping.preset.insert({
 	  ["<C-b>"] = cmp.mapping.scroll_docs(-4),
 	  ["<C-f>"] = cmp.mapping.scroll_docs(4),
@@ -120,28 +117,28 @@ require("lazy").setup({
 	}),
 	sources = cmp.config.sources({
 	  { name = "nvim_lsp" },
-	  { name = "nvim_lua" },
-	  { name = "luasnip" },
 	}, {
 	  { name = "buffer" },
-	  { name = "path" },
 	}),
       })
 
-      cmp.setup.cmdline(":", {
+	     cmp.setup.cmdline(":", {
 	mapping = cmp.mapping.preset.cmdline(),
 	sources = cmp.config.sources({
 	  { name = "path" },
-	}, {
-	  { name = "cmdline" },
 	}),
-      })
+	     })
     end
   },
   { "ray-x/lsp_signature.nvim",
     event = "VeryLazy",
     opts = {},
-    config = function(_, opts) require'lsp_signature'.setup(opts) end
+    config = function(_, opts) require'lsp_signature'.setup({
+      doc_lines = 0,
+      handler_opts = {
+	border = "none"
+      },
+    }) end
   },
   {
     "metalelf0/jellybeans-nvim", 
@@ -150,6 +147,16 @@ require("lazy").setup({
     priority = 1000, -- load first
     config = function()
       vim.cmd([[colorscheme jellybeans-nvim]])
+    end
+  },
+  {
+    'rust-lang/rust.vim',
+    ft = { "rust" },
+    config = function()
+      vim.g.rustfmt_autosave = 1
+      vim.g.rustfmt_emit_files = 1
+      vim.g.rustfmt_fail_silently = 0
+      vim.g.rust_clip_command = 'wl-copy'
     end
   },
 })
