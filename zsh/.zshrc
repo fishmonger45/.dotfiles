@@ -18,7 +18,6 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
 export PATH=$PATH:/opt/homebrew/opt/libpq/bin
 source /opt/homebrew/opt/chruby/share/chruby/chruby.sh
 source /opt/homebrew/opt/chruby/share/chruby/auto.sh
-chruby ruby-3.3.4
 
 alias runn="tmux send-keys -t 0 'yarn start:calculations' C-m \; \
   send-keys -t 1 'yarn start:node' C-m \; \

@@ -45,13 +45,13 @@ require("lazy").setup({
       }
     end
   },
-  { "tpope/vim-surround", lazy = false },
-  { "neovim/nvim-lspconfig",
+  -- lsp
+  {
+    "neovim/nvim-lspconfig",
     dependencies = {
       'williamboman/mason-lspconfig.nvim',
       dependencies = { 'williamboman/mason.nvim' },
     },
-
     config = function()
       local lspconfig = require("lspconfig")
       local mason = require("mason")
@@ -83,17 +83,6 @@ require("lazy").setup({
       })
     end,
   },
-  { "brenoprata10/nvim-highlight-colors" },
-  { "ibhagwan/fzf-lua",
-    config = function()
-      local fzf = require("fzf-lua")
-      fzf.setup({
-      })
-      vim.keymap.set("n", "<leader>ff", fzf.files, {})
-      vim.keymap.set("n", "<leader>fb", fzf.buffers, {})
-      vim.keymap.set("n", "<leader>fg", fzf.live_grep, {})
-    end
-  },
   {
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",
@@ -101,7 +90,6 @@ require("lazy").setup({
       "neovim/nvim-lspconfig",
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",
-      "hrsh7th/cmp-path",
     },
     config = function()
       local cmp = require("cmp")
@@ -121,16 +109,10 @@ require("lazy").setup({
 	  { name = "buffer" },
 	}),
       })
-
-	     cmp.setup.cmdline(":", {
-	mapping = cmp.mapping.preset.cmdline(),
-	sources = cmp.config.sources({
-	  { name = "path" },
-	}),
-	     })
     end
   },
-  { "ray-x/lsp_signature.nvim",
+  {
+    "ray-x/lsp_signature.nvim",
     event = "VeryLazy",
     opts = {},
     config = function(_, opts) require'lsp_signature'.setup({
@@ -140,15 +122,71 @@ require("lazy").setup({
       },
     }) end
   },
+  -- misc
   {
-    "metalelf0/jellybeans-nvim", 
-    dependencies = {"rktjmp/lush.nvim"},
+    "savq/melange-nvim", 
     lazy = false,
-    priority = 1000, -- load first
+    priority = 1000,
     config = function()
-      vim.cmd([[colorscheme jellybeans-nvim]])
+      vim.cmd([[colorscheme melange]])
     end
   },
+  {
+    "brenoprata10/nvim-highlight-colors"
+  },
+  {
+    "ibhagwan/fzf-lua",
+    config = function()
+      local fzf = require("fzf-lua")
+      fzf.setup({
+      })
+      vim.keymap.set("n", "<leader>ff", fzf.files, {})
+      vim.keymap.set("n", "<leader>fb", fzf.buffers, {})
+      vim.keymap.set("n", "<leader>fg", fzf.live_grep, {})
+    end
+  },
+  { 
+    "tpope/vim-surround",
+    lazy = false
+  },
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    keys = {
+      {
+	"<leader>?",
+	function()
+	  require("which-key").show({ global = false })
+	end,
+	desc = "Buffer Local Keymaps (which-key)",
+      },
+    },
+  },
+  {
+    "kelly-lin/ranger.nvim",
+    config = function()
+      require("ranger-nvim").setup({ replace_netrw = true })
+      vim.api.nvim_set_keymap("n", "<leader>ef", "", {
+	noremap = true,
+	callback = function()
+	  require("ranger-nvim").open(true)
+	end,
+      })
+    end,
+  },
+  {
+    "tpope/vim-fugitive",
+    lazy = false,
+    config = function()
+    end,
+  },
+  {
+    "vimwiki/vimwiki",
+    lazy = false,
+    config = function()
+    end,
+  },
+  -- language
   {
     'rust-lang/rust.vim',
     ft = { "rust" },
