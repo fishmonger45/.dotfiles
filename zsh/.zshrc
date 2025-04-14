@@ -13,6 +13,8 @@ source $HOME/.fzf.zsh
 . "$HOME/.cargo/env"
 PS1='%2d $ '
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+export DO_NOT_TRACK=1
+
 
 #runn
 export PATH=$PATH:/opt/homebrew/opt/libpq/bin
@@ -88,3 +90,33 @@ alias gst='git stash'
 alias gstp='git stash pop'
 
 alias gup='git pull'
+
+gmd() {
+  local branch="$1"
+
+  if [[ -z "$branch" ]]; then
+    local selection
+    selection=$(gh pr list --author "@me" --limit 50 --json headRefName,title --jq '.[] | "\(.headRefName) | \(.title)"' | \
+      fzf --height 15 --prompt="Select a PR branch: " --border --exit-0 --preview="echo {}")
+
+    if [[ -z "$selection" ]]; then
+      echo "No branch selected."
+      return 1
+    fi
+
+    branch=$(echo "$selection" | awk -F' | ' '{print $1}')
+  fi
+
+  echo "Merging development into PR branch: $branch ..."
+  git fetch origin && git checkout "$branch" && git merge origin/development && git push origin "$branch" && git checkout -
+}
+
+export PATH="$(brew --prefix)/opt/findutils/libexec/gnubin:$(brew --prefix)/opt/gnu-getopt/bin:$(brew --prefix)/opt/make/libexec/gnubin:$(brew --prefix)/opt/util-linux/bin:${PATH}"
+export MACOSX_DEPLOYMENT_TARGET=10.09
+
+# bun completions
+[ -s "/Users/fishmonger45/.bun/_bun" ] && source "/Users/fishmonger45/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

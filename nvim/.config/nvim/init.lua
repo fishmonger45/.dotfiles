@@ -1,4 +1,4 @@
-vim.o.colorcolumn = '80'
+-- vim.o.colorcolumn = '80'
 vim.o.vb=true
 vim.o.smartcase=true
 vim.o.number=true
@@ -37,7 +37,7 @@ require("lazy").setup({
     lazy=false,
     config = function(_, opts)
       require('nvim-treesitter.configs').setup {
-	ensure_installed = {"typescript", "tsx", "rust", "python", "graphql"},
+	ensure_installed = {"typescript", "tsx", "rust", "python", "graphql", "cpp"},
 	highlight= { enable = true },
 	auto_install = true,
 	incremental_selection = { enable = true },
@@ -45,7 +45,6 @@ require("lazy").setup({
       }
     end
   },
-  -- lsp
   {
     "neovim/nvim-lspconfig",
     dependencies = {
@@ -70,6 +69,7 @@ require("lazy").setup({
       lspconfig.graphql.setup({})
       lspconfig.solargraph.setup({})
       lspconfig.ts_ls.setup({})
+      lspconfig.clangd.setup({})
 
       require('mason-lspconfig').setup({
 	ensure_installed = {
@@ -78,7 +78,8 @@ require("lazy").setup({
 	  'solargraph',
 	  'graphql',
 	  'rubocop',
-	  'ts_ls'
+	  'ts_ls',
+	  'clangd'
 	},
       })
     end,
@@ -122,13 +123,15 @@ require("lazy").setup({
       },
     }) end
   },
-  -- misc
   {
-    "savq/melange-nvim", 
+    "metalelf0/jellybeans-nvim", 
     lazy = false,
+    dependencies = {
+      "rktjmp/lush.nvim",
+    },
     priority = 1000,
     config = function()
-      vim.cmd([[colorscheme melange]])
+      vim.cmd([[colorscheme jellybeans-nvim]])
     end
   },
   {
@@ -150,19 +153,6 @@ require("lazy").setup({
     lazy = false
   },
   {
-    "folke/which-key.nvim",
-    event = "VeryLazy",
-    keys = {
-      {
-	"<leader>?",
-	function()
-	  require("which-key").show({ global = false })
-	end,
-	desc = "Buffer Local Keymaps (which-key)",
-      },
-    },
-  },
-  {
     "kelly-lin/ranger.nvim",
     config = function()
       require("ranger-nvim").setup({ replace_netrw = true })
@@ -175,18 +165,11 @@ require("lazy").setup({
     end,
   },
   {
-    "tpope/vim-fugitive",
-    lazy = false,
-    config = function()
-    end,
-  },
-  {
     "vimwiki/vimwiki",
     lazy = false,
     config = function()
     end,
   },
-  -- language
   {
     'rust-lang/rust.vim',
     ft = { "rust" },
