@@ -123,8 +123,10 @@ require("lazy").setup({
         dependencies = {"rktjmp/lush.nvim"}
     }, {"brenoprata10/nvim-highlight-colors"}, {
         "ibhagwan/fzf-lua",
-        opts = {lazy = false, winopts = {split = "belowright new"}},
+
+        opts = {lazy = false},
         config = function()
+            require("fzf-lua").setup({winopts = {split = "belowright new"}})
             vim.keymap.set("n", "<leader>ff", "<cmd>FzfLua files<cr>",
                            {desc = "Fuzzy find files"})
             vim.keymap.set("n", "<leader>fg", "<cmd>FzfLua live_grep<cr>",
@@ -149,7 +151,7 @@ require("lazy").setup({
         end
     }, {"vimwiki/vimwiki", lazy = false, config = function() end}, {
         "kawre/leetcode.nvim",
-        build = ":TSUpdate html", -- if you have `nvim-treesitter` installed
+        build = ":TSUpdate html",
         dependencies = {
             "nvim-telescope/telescope.nvim", "ibhagwan/fzf-lua",
             "nvim-lua/plenary.nvim", "MunifTanjim/nui.nvim"
@@ -197,6 +199,12 @@ require("lazy").setup({
                     lua = {"lua-format", "stylua", stop_after_first = true},
                     python = {"black"},
                     ruby = {"rubocop"},
+                    typescript = {
+                        "prettierd",
+                        "prettier",
+                        stop_after_first = true
+
+                    },
                     javascript = {
                         "prettierd",
                         "prettier",
@@ -239,9 +247,14 @@ require("lazy").setup({
 
             vim.api.nvim_set_keymap('n', '<leader>tf', [[:FormatToggle<CR>]],
                                     {noremap = true, silent = true})
-            vim.api.nvim_set_keymap('n', '<leader>fo',
-                                    [[:lua require("conform").format({bufnr = vim.api.nvim_get_current_buf()})<CR>]],
-                                    {noremap = true, silent = true})
+
+            vim.keymap.set("n", "<leader>fo",
+                           "[[:lua require(\"conform\").format({bufnr = vim.api.nvim_get_current_buf()})<CR>]]",
+                           {
+                desc = "Format buffer",
+                noremap = true,
+                silent = true
+            })
         end
 
     }
