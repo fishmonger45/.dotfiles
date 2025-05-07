@@ -1,5 +1,6 @@
 vim.o.colorcolumn = "80"
 vim.o.visualbell = true
+vim.o.ignorecase = true
 vim.o.smartcase = true
 vim.o.number = true
 vim.o.lazyredraw = true
@@ -18,8 +19,22 @@ vim.o.foldenable = true
 vim.o.shiftwidth = 2
 vim.g.mapleader = ","
 vim.o.termguicolors = true
-vim.o.termguicolors = true
+vim.opt.formatoptions = "cqrnj"
 vim.cmd([[colorscheme lunaperche]])
+
+vim.api.nvim_set_keymap('n', '<C-K>', ':bprev<CR>',
+                        {noremap = true, silent = true})
+vim.api.nvim_set_keymap('n', '<C-J>', ':bnext<CR>',
+                        {noremap = true, silent = true})
+-- <C-W> d doesn't work with TS symbols. Also gv is already bound!
+-- vim.api
+--     .nvim_set_keymap('n', ',gv', ':vs<CR>gd', {noremap = true, silent = true})
+
+vim.cmd [[
+  augroup strdr4605
+    autocmd FileType typescript,typescriptreact set makeprg=./node_modules/.bin/tsc\ \\\|\ sed\ 's/(\\(.*\\),\\(.*\\)):/:\\1:\\2:/'
+  augroup END
+]]
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -89,13 +104,16 @@ require("lazy").setup({
         event = "InsertEnter",
         dependencies = {
             "neovim/nvim-lspconfig", "hrsh7th/cmp-nvim-lsp",
-            "hrsh7th/cmp-buffer"
+            "hrsh7th/cmp-buffer", "hrsh7th/cmp-nvim-lsp-signature-help"
         },
         config = function()
             local cmp = require("cmp")
             vim.opt.completeopt = {"menu", "menuone", "noselect"}
 
             cmp.setup({
+                completion = {
+                    autocomplete = false -- Disable automatic completion
+                },
                 mapping = cmp.mapping.preset.insert({
                     ["<C-b>"] = cmp.mapping.scroll_docs(-4),
                     ["<C-f>"] = cmp.mapping.scroll_docs(4),
@@ -103,18 +121,25 @@ require("lazy").setup({
                     ["<C-e>"] = cmp.mapping.abort(),
                     ["<CR>"] = cmp.mapping.confirm({select = true})
                 }),
-                sources = cmp.config.sources({{name = "nvim_lsp"}},
-                                             {{name = "buffer"}})
-            })
-        end
-    }, {
-        "ray-x/lsp_signature.nvim",
-        event = "VeryLazy",
-        opts = {},
-        config = function(_, opts)
-            require("lsp_signature").setup({
-                doc_lines = 0,
-                handler_opts = {border = "none"}
+                sources = cmp.config.sources({{name = "nvim_lsp"}}, {
+                    {name = "buffer"}, {name = 'nvim_lsp_signature_help'}
+                }),
+                formatting = {
+                    format = function(entry, vim_item)
+                        if entry.completion_item.detail ~= nil and
+                            entry.completion_item.detail ~= "" then
+                            vim_item.menu = entry.completion_item.detail
+                        else
+                            vim_item.menu = ({
+                                nvim_lsp = "[LSP]",
+                                luasnip = "[Snippet]",
+                                buffer = "[Buffer]",
+                                path = "[Path]"
+                            })[entry.source.name]
+                        end
+                        return vim_item
+                    end
+                }
             })
         end
     }, {
@@ -126,30 +151,36 @@ require("lazy").setup({
 
         opts = {lazy = false},
         config = function()
-            require("fzf-lua").setup({winopts = {split = "belowright new"}})
-            vim.keymap.set("n", "<leader>ff", "<cmd>FzfLua files<cr>",
-                           {desc = "Fuzzy find files"})
-            vim.keymap.set("n", "<leader>fg", "<cmd>FzfLua live_grep<cr>",
-                           {desc = "Fuzzy grep files"})
-            vim.keymap.set("n", "<leader>fh", "<cmd>FzfLua helptags<cr>",
-                           {desc = "Fuzzy grep tags in help files"})
-            vim.keymap.set("n", "<leader>ft", "<cmd>FzfLua btags<cr>",
-                           {desc = "Fuzzy search buffer tags"})
-            vim.keymap.set("n", "<leader>fb", "<cmd>FzfLua buffers<cr>",
-                           {desc = "Fuzzy search opened buffers"})
-        end
-    }, {"tpope/vim-surround"}, {
-        "kelly-lin/ranger.nvim",
-        config = function()
-            require("ranger-nvim").setup({replace_netrw = true})
-            vim.api.nvim_set_keymap("n", "<leader>ef", "", {
-                noremap = true,
-                callback = function()
-                    require("ranger-nvim").open(true)
-                end
+            require("fzf-lua").setup({
+                "hide",
+                winopts = {split = "belowright new", preview = {delay = 0}},
+                fzf_opts = {
+                    ['--history'] = vim.fn.stdpath("data") .. '/fzf-lua-history'
+                },
+                keymap = {
+                    fzf = {
+                        true,
+                        ["ctrl-q"] = "select-all+accept", -- Send everything to quickfix.
+                        ['ctrl-n'] = 'down',
+                        ['ctrl-p'] = 'up'
+                    }
+                }
             })
+            vim.keymap.set("n", "<leader>ff", "<cmd>FzfLua files<cr>",
+                           {desc = "Find files"})
+            vim.keymap.set("n", "<leader>fr", "<cmd>FzfLua resume<cr>",
+                           {desc = "Fzf resume"})
+            vim.keymap.set("n", "<leader>fg", "<cmd>FzfLua live_grep<cr>",
+                           {desc = "Grep files"})
+            vim.keymap.set("n", "<leader>fh", "<cmd>FzfLua helptags<cr>",
+                           {desc = "Grep tags in help files"})
+            vim.keymap.set("n", "<leader>ft", "<cmd>FzfLua btags<cr>",
+                           {desc = "Search buffer tags"})
+            vim.keymap.set("n", "<leader>fb", "<cmd>FzfLua buffers<cr>",
+                           {desc = "Search opened buffers"})
         end
-    }, {"vimwiki/vimwiki", lazy = false, config = function() end}, {
+    }, {"tpope/vim-surround"},
+    {"vimwiki/vimwiki", lazy = false, config = function() end}, {
         "kawre/leetcode.nvim",
         build = ":TSUpdate html",
         dependencies = {
@@ -209,7 +240,8 @@ require("lazy").setup({
                         "prettierd",
                         "prettier",
                         stop_after_first = true
-                    }
+                    },
+                    cpp = {"clang-format"}
                 },
                 format_on_save = function(bufnr)
                     if vim.g.disable_autoformat or
@@ -257,6 +289,75 @@ require("lazy").setup({
             })
         end
 
+    }, {'stevearc/oil.nvim', opts = {}, lazy = false}, {
+        "ggandor/leap.nvim",
+        lazy = false,
+        config = function()
+            local leap = require('leap')
+            vim.keymap.set('n', '<leader>s', function()
+                require('leap').leap({
+                    target_windows = {vim.api.nvim_get_current_win()}
+                })
+            end)
+            -- vim.keymap.set('n', 'gs', '<Plug>(leap-from-window)')  -- or S maybe
+            -- vim.keymap.set({'x', 'o'}, 's', '<Plug>(leap-forward)')
+            -- vim.keymap.set({'x', 'o'}, 'S', '<Plug>(leap-backward)')
+        end
+
+    }, {
+        "folke/trouble.nvim",
+        opts = {warn_no_results = false, open_no_results = true},
+        cmd = "Trouble",
+        -- config = function()
+        --     -- local config = require("fzf-lua.config")
+        --     -- local actions = require("trouble.sources.fzf").actions
+        --     -- config.defaults.actions.files["ctrl-t"] = actions.open
+        --
+        -- end,
+        keys = {
+            {
+                "<leader>xx",
+                "<cmd>Trouble diagnostics toggle<cr>",
+                desc = "Diagnostics (Trouble)"
+            },
+            {
+                "<leader>xf",
+                "<cmd>Trouble fzf toggle<cr>",
+                desc = "Fzf (Trouble)"
+            }, {
+                "<leader>xX",
+                "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+                desc = "Buffer Diagnostics (Trouble)"
+            }, {
+                "<leader>cs",
+                "<cmd>Trouble symbols toggle focus=false<cr>",
+                desc = "Symbols (Trouble)"
+            }, {
+                "<leader>cl",
+                "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+                desc = "LSP Definitions / references / ... (Trouble)"
+            }, {
+                "<leader>xL",
+                "<cmd>Trouble loclist toggle<cr>",
+                desc = "Location List (Trouble)"
+            }, {
+                "<leader>xQ",
+                "<cmd>Trouble qflist toggle<cr>",
+                desc = "Quickfix List (Trouble)"
+            }
+        }
+    }, {
+        "samharju/serene.nvim",
+        -- for using as main:
+        enabled = false,
+        config = function() vim.cmd.colorscheme("serene") end
+    }, {
+        "dmmulroy/tsc.nvim",
+        config = function()
+            local tsc = require('tsc')
+            vim.keymap.set('n', '<leader>to', ':TSCOpen<CR>')
+            vim.keymap.set('n', '<leader>tc', ':TSCClose<CR>')
+        end
     }
 })
 
